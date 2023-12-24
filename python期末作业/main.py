@@ -35,53 +35,48 @@ class Game:
         print(f"The available colors which will be used are {available_colors}")
         input("Press the enter key to continue...")
 
+        # 提示玩家输入需要猜测的次数
+        self.rounds.maxRounds = int(Input().get_user_input("Please enter the number of rounds you would like to play: "))
+        print(f"Computer has generated a color grid consisting of {self.rounds.maxPegsPerRound} colors.")
+
     def play_game(self):
-        print("Let's start the game!")
+
         for round_num in range(self.rounds.maxRounds):
-            print(f"\nRound {round_num + 1}/{self.rounds.maxRounds}")
+            print(f"Beginning Round {round_num + 1}")
+            player_score = 0
+
+            # 计算机生成一个随机的彩钉顺序
+            self.rounds.computerColorGrid = ColorGrid(random.sample(self.rounds.allColorGrid.pegs, self.rounds.maxPegsPerRound))
 
             # 玩家猜测阶段
-            player_guess = self.get_player_guess()
-            self.rounds.roundGuesses.append(player_guess)
+            print(f"Player Score: {player_score}")
+            print(f"The available colors which can be used are {', '.join(peg.color for peg in self.rounds.allColorGrid.pegs)}")
 
-            # 检查阶段
-            correct_pegs = self.check_guess(player_guess)
-            self.show_feedback(correct_pegs)
+            # 玩家输入猜测
+            for i in range(1, self.rounds.maxPegsPerRound + 1):
+                guess_color = Input().get_user_input(f"Please enter your guess for the {i} color...")
+                player_guess = ColorGrid([Peg(guess_color.strip(), 0)])
 
-            # 判断是否猜对
-            if correct_pegs == self.rounds.maxPegsPerRound:
-                print("Congratulations! You guessed the correct sequence.")
-                break
+                # 检查猜测是否合规
+                if Validation().is_valid_guess(player_guess, self.rounds.allColorGrid):
+                    # 检查玩家猜测和计算机生成的颜色序列的匹配情况
+                    correct_pegs = self.check_guess(player_guess)
+                    player_score += correct_pegs
+                else:
+                    print("Invalid guess. Please enter a valid color.")
+                    i -= 1  # 重新让玩家输入
+
+            # 显示本轮得分
+            print(f"Player Score for Round {round_num + 1}: {player_score}")
 
         # 游戏结束
         self.show_final_score()
-
-    def get_player_guess(self):
-        # 获取玩家猜测
-        while True:
-            guess_input = Input().get_user_input("Enter your guess (comma-separated colors): ")
-            player_guess = ColorGrid([Peg(color.strip(), 0) for color in guess_input.split(',')])
-
-            # 检查猜测是否合规
-            if Validation().is_valid_guess(player_guess, self.rounds.allColorGrid):
-                return player_guess
-            else:
-                print("Invalid guess. Please enter valid colors.")
 
     def check_guess(self, player_guess):
         # 检查玩家猜测和计算机生成的颜色序列的匹配情况
         correct_pegs = sum([1 for peg1, peg2 in zip(player_guess.pegs, self.rounds.computerColorGrid.pegs) if peg1.color == peg2.color])
         return correct_pegs
 
-    def show_feedback(self, correct_pegs):
-        # 显示反馈信息
-        print(f"Correct pegs: {correct_pegs}/{self.rounds.maxPegsPerRound}")
-
-    def show_final_score(self):
-        # 显示最终分数和正确顺序
-        print("\nGame Over!")
-        print(f"Final score: {sum(peg.value for peg in self.rounds.roundGuesses[-1].pegs)}")
-        print(f"Correct sequence: {[peg.color for peg in self.rounds.computerColorGrid.pegs]}")
 
 class FileIO:
     def __init__(self, filename):
@@ -128,3 +123,4 @@ if __name__ == "__main__":
     game = Game(rounds)
     game.welcome()
     game.play_game()
+
