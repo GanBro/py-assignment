@@ -1,0 +1,9 @@
++================================================================+
+|                                                                |
+|                 Welcome to MasterMind                          |
+|                                                                |
++================================================================+
+The game will use the colors defined in the settings file.
+The maximum number of colored pegs in each round is set to 3
+The available colors which will be used are Yellow, White, Blue, Green, Red, Black,
+Press the enter key to continue...
