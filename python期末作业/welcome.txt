@@ -21,7 +21,7 @@ White,
 Please enter your guess for the 3 color...
 Orange,
 Please enter a color from the provided list only.
-Please enter your guess for the 3 color...
+Please enter your guess for the 3 color...Wh
 Blue
 Unfortunately, your only managed to guess # 0 colors correctly!
 Still another round. Try again!
