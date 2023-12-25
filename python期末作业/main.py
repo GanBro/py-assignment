@@ -16,7 +16,7 @@ class Rounds:
         self.maxRounds = max_rounds  # 最大回合数
         self.allColorGrid = all_color_grid  # 所有可用彩钉
         self.computerColorGrid = computer_color_grid  # 计算机生成的彩钉序列
-        self.roundGuesses = []  # 每轮猜测得分的列表
+        self.roundGuesses = []  # 玩家猜测的记录
 
 class Game:
     def __init__(self, rounds):
@@ -63,29 +63,31 @@ class Game:
         return correct_pegs
 
     def output_incorrect_guess_message(self, num_correct_colors):
-        print(f"Unfortunately, you only managed to guess # {num_correct_colors} colors correctly!")
+        index_list = ", ".join(str(num) for num in num_correct_colors)
+        print(f"Unfortunately, you only managed to guess # {index_list} colors correctly!")
         print("Still another round. Try again!")
         input("Press the enter key to continue...")
-
     def check_guesses(self, player_guesses):
-        """
-        判断玩家猜测是否与计算机生成的彩钉序列完全相同
-        """
+        num_correct_colors = []
         if player_guesses.noOfPegs != len(self.rounds.computerColorGrid.pegs):
             return 0
 
         score = 0  # 加分
+        cnt = 0    # 猜对次数
 
         for i in range(player_guesses.noOfPegs):
             if player_guesses.pegs[i].color == self.rounds.computerColorGrid.pegs[i].color:
+                cnt = cnt + 1
+                num_correct_colors.append(i + 1)
                 score = score + self.rounds.computerColorGrid.pegs[i].value
-        return score
+        return [score, num_correct_colors, cnt]
 
     def play_game(self):
         sensitive_words = ["文化大革命", "六四事件", "政治敏感"]
+        player_score = 0 # 总分
+        st = False # 标记是否成功
         for round_num in range(self.rounds.maxRounds):
             print(f"Beginning Round {round_num + 1}")
-            player_score = 0
 
             # 计算机生成一个随机的彩钉顺序
             # self.rounds.computerColorGrid = ColorGrid(
@@ -101,31 +103,41 @@ class Game:
             while len(pegs_list) < self.rounds.maxPegsPerRound:  # 只有当玩家猜测未达到最大彩钉数时才继续循环
                 guess_color = Game.get_user_input(f"Please enter your guess for the {i} color...")
                 if guess_color.strip() in [peg.color for peg in self.rounds.allColorGrid.pegs]:
-                    pegs_list.append(Peg(guess_color.strip(), 0))  # 将玩家猜测添加到列表中, 0无关紧要
+                    for peg in computer_color_grid.pegs:
+                        if peg.color == guess_color.strip():
+                            pegs_list.append(Peg(guess_color.strip(), peg.value))  # 将玩家猜测添加到列表中
+                            break  # 如果找到匹配的彩钉，则结束循环
                     i += 1  # 下标加1
                 else:
                     print("Please enter a color from the provided list only.")
             player_guesses = ColorGrid(pegs_list)
-            player_score += self.check_guesses(player_guesses)
-            # 假设secret_code是正确的答案，player_guess是玩家的猜测
-            if player_score == player_guesses.noOfPegs: # 完全匹配才算成功
-                print("猜测成功!")
+            ret = self.check_guesses(player_guesses)
+            player_score += ret[0] # 每轮获得的score
+            player_list = ret[1] # 猜测对的color
+            player_cnt = ret[2] # 猜对的数量
+            self.rounds.roundGuesses.append(player_guesses) # 保存玩家猜测的记录
+            if player_cnt == player_guesses.noOfPegs: # 完全匹配才算成功
+                st = True
                 break
             else:
-                self.output_incorrect_guess_message(player_score)
-                continue
-
-
-            # 显示本轮得分
-            print(f"Player Score for Round {round_num + 1}: {player_score}")
-            self.rounds.roundGuesses.append(player_score)
+                self.output_incorrect_guess_message(player_list)
 
         # 游戏结束
-        self.show_final_score()
+        self.show_final_score(player_score, st)
 
-    def show_final_score(self):
-        total_score = sum(self.rounds.roundGuesses)
-        print(f"Game Over!\nTotal Score: {total_score}")
+    def show_final_score(self, total_score, st):
+        computer_colors = ', '.join(str(color.color) for color in self.rounds.computerColorGrid.pegs)
+        if st:
+            print(f"Game Over, you are success!\nTotal Score: {total_score}")
+            file_io = FileIO("outcome.txt")
+            file_io.write_file(f"Total Score: {total_score}\nSuccess: True")
+        else:
+            print(f"Too Bad!!Your final Score is: {total_score}")
+            print(f"The computer colors were: {computer_colors}.")
+            file_io = FileIO("outcome.txt")
+            file_io.write_file(f"Total Score: {total_score}\nSuccess: False")
+        input("Press the enter key to continue...")
+
 
 class FileIO:
     def __init__(self, filename):
@@ -153,7 +165,7 @@ if __name__ == "__main__":
     colors = lines[1:]  # 获取可用的颜色列表
 
     # 初始化游戏设置
-    all_color_grid = ColorGrid([Peg(color, random.randint(1, 10)) for i, color in enumerate(colors)])  # 创建包含所有颜色的ColorGrid对象
+    all_color_grid = ColorGrid([Peg(color, random.randint(1, max_pegs_per_round + 1)) for i, color in enumerate(colors)])  # 创建包含所有颜色的ColorGrid对象
     computer_color_grid = ColorGrid(random.sample(all_color_grid.pegs, max_pegs_per_round))  # 创建计算机生成的彩钉序列
     rounds = Rounds(max_pegs_per_round, 5, all_color_grid, computer_color_grid)  # 创建Rounds对象，用于跟踪游戏的回合信息
 
