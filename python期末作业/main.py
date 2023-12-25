@@ -74,12 +74,12 @@ class Game:
         if player_guesses.noOfPegs != len(self.rounds.computerColorGrid.pegs):
             return 0
 
-        match_count = 0  # 计数器，用于记录匹配的彩钉数量
+        score = 0  # 加分
 
         for i in range(player_guesses.noOfPegs):
             if player_guesses.pegs[i].color == self.rounds.computerColorGrid.pegs[i].color:
-                match_count = match_count + 1
-        return match_count
+                score = score + self.rounds.computerColorGrid.pegs[i].value
+        return score
 
     def play_game(self):
         sensitive_words = ["文化大革命", "六四事件", "政治敏感"]
@@ -101,7 +101,7 @@ class Game:
             while len(pegs_list) < self.rounds.maxPegsPerRound:  # 只有当玩家猜测未达到最大彩钉数时才继续循环
                 guess_color = Game.get_user_input(f"Please enter your guess for the {i} color...")
                 if guess_color.strip() in [peg.color for peg in self.rounds.allColorGrid.pegs]:
-                    pegs_list.append(Peg(guess_color.strip(), i)) # 将玩家猜测添加到列表中
+                    pegs_list.append(Peg(guess_color.strip(), 0))  # 将玩家猜测添加到列表中, 0无关紧要
                     i += 1  # 下标加1
                 else:
                     print("Please enter a color from the provided list only.")
