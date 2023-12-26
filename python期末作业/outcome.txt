@@ -1,2 +1,2 @@
-Total Score: 7
-Success: True
+Total Score: 3
+Success: False

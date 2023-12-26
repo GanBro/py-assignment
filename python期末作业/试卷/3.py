@@ -63,8 +63,6 @@ class Circle(Shape):
     def calPerimeter(self):
         self.perimeter = 2 * math.pi * self.radius
 
-
-# 测试
 rectangle = Rectangle("矩形")
 rectangle.Display()
 
